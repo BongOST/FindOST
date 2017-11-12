@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-
 __author__ = 'LexusLee'
 
 """
-FindOST Backend main server
+FindOST Server 入口 
 """
 import os
 import sys
@@ -26,6 +25,8 @@ const.env = options.env
 import foundation.parseConfig as parseConfig
 parseConfig.load_config()
 
+from foundation.log import logger  # 加载日志文件配置，不能删
+
 # 初始化设置
 import sys
 default_encoding = 'utf-8'
@@ -34,9 +35,12 @@ if sys.getdefaultencoding() != default_encoding:
     sys.setdefaultencoding(default_encoding)
 
 # 该部分引用python系统模块
+import os.path
 import signal
+import time
 
 # 该部分引用tornado模块
+import tornado
 from tornado.ioloop import IOLoop
 from tornado.web import url
 from tornado.autoreload import add_reload_hook
@@ -44,18 +48,24 @@ from tornado.autoreload import add_reload_hook
 # 该部分引用数据库连接
 from serverApp.common.connectionPool import dbpool
 
-# from tests.testhandler_for_authorityconf import TestHandler_for_authorityconf
-# from tests.test_handler_for_authority import TestHandlerForAuthority
+# 该部分引用services
+from serverApp.word.wordHandler import WordHander
+from serverApp.word.wordHandler import ShowAllWord
+from serverApp.translate.translateHandler import TranslateHandler
 
 # 该部分引用测试部分test handler
 if const.env == "development":
     test_handlers = [
-        url(r"/v1/login", Login)
+
     ]
     logger.info("加载测试的handlers")
 else:
     logger.info("忽略测试的handlers")
     test_handlers = []
+
+
+
+
 
 # 该部分引用系统部分handler
 handlers = [
@@ -83,6 +93,7 @@ def main():
     server = HTTPServer(app, xheaders=True)
     server.listen(port=options.port, address=const.basic.get("host", ""))
     IOLoop.current().start()
+
 
 def do_before_autoreload():
     if not dbpool.closed:
